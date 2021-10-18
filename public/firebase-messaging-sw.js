@@ -22,19 +22,32 @@ const messaging = firebase.messaging();
 // and you should use data messages for custom notifications.
 // For more info see: 
 // https://firebase.google.com/docs/cloud-messaging/concept-options
+
+// FCM automatically displays the message when 'notification' key is in payload
+// It will also automatically displays when 'data' key is in payload
+// You can be received notification tiwce when both key is in payload
+
+// If you wanna handle notification, use only 'data' key
+// See: https://firebase.google.com/docs/cloud-messaging/concept-options#notifications_and_data_messages
+
 messaging.onBackgroundMessage(function (payload) {
   console.log('[firebase-messaging-sw.js] Received background message ', payload);
-  // Customize notification here
-  let { notification: notificationData } = payload
-  if (notificationData) {
-
-    const notificationTitle = notificationData.title || 'Test title';
+  // Customize notification here for 'data' key
+  let { data } = payload
+  if (data && data.title && data.body) {
+    const notificationTitle = data.title || 'Test title';
     const notificationOptions = {
-      body: notificationData.body || 'Test body',
+      body: data.body || 'Test body',
     };
 
     self.registration.showNotification(notificationTitle,
       notificationOptions);
-
   }
+});
+
+self.addEventListener('notificationclick', function (event) {
+  let { notification } = event;
+  // this event will not be occoured by notication of FCM 'notification' key
+  console.log('[firebase-messaging-sw.js]  Notification clicked: ', event);
+  notification.close()
 });
